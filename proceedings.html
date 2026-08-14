@@ -42,6 +42,12 @@
              background:var(--bg-raised);border:1px solid var(--border);border-radius:6px;
              color:var(--text);margin-bottom:20px;">
 
+    <div class="contributors-wrap">
+      <h2 style="margin-top:0">Most active contributors</h2>
+      <p style="margin-bottom:0">By papers indexed on dblp across all editions.</p>
+      <div class="contributor-list" id="contributors-root"></div>
+    </div>
+
     <div id="proc-root">
       <div class="coming-soon">Querying sparql.dblp.org&hellip;</div>
     </div>
@@ -195,6 +201,22 @@ function render(rows) {
   }).join('');
 }
 
+function renderContributors(rows) {
+  const counts = new Map();
+  rows.forEach(r => {
+    r.authors.forEach(name => {
+      if (!name) return;
+      counts.set(name, (counts.get(name) || 0) + 1);
+    });
+  });
+  const top = [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 24);
+  document.getElementById('contributors-root').innerHTML = top.map(([name, n]) =>
+    `<span class="contributor-chip">${escapeHtml(name)} <span class="count">${n}</span></span>`
+  ).join('');
+}
+
 const citeCache = new Map();
 
 async function toggleCite(btn) {
@@ -262,6 +284,7 @@ async function loadProceedings() {
       authors: b.authors ? b.authors.value.split('||') : []
     }));
     render(allRows);
+    renderContributors(allRows);
   } catch (err) {
     document.getElementById('proc-stats').textContent = 'Could not reach dblp.org';
     root.innerHTML = '<div class="coming-soon">Could not reach the dblp SPARQL endpoint (' +

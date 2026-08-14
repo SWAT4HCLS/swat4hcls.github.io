@@ -136,6 +136,59 @@ nav.main-nav a.active { color: var(--text); background: var(--bg-raised); }
   margin-top: 8px;
 }
 
+/* ---- Get involved CTA grid ---- */
+.cta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 20px 0 8px;
+}
+@media (max-width: 560px) {
+  .cta-grid { grid-template-columns: 1fr; }
+}
+.cta-item {
+  display: block;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+}
+.cta-item:hover { border-color: var(--accent); text-decoration: none; }
+.cta-label {
+  display: block;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.cta-label::after { content: " \2192"; color: var(--accent); }
+.cta-desc {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+/* ---- Proceedings: contributor chips ---- */
+.contributors-wrap { margin: 18px 0 30px; }
+.contributor-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.contributor-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-raised);
+}
+.contributor-chip .count {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--bg);
+  background: var(--accent);
+  border-radius: 999px;
+  padding: 1px 6px;
+}
+
 /* ---- Legacy notice ---- */
 .legacy-notice {
   display: flex;
