@@ -179,7 +179,9 @@ nav.main-nav a.active { color: var(--text); background: var(--bg-raised); }
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--bg-raised);
+  color: var(--text);
 }
+a.contributor-chip:hover { border-color: var(--accent); text-decoration: none; }
 .contributor-chip .count {
   font-family: var(--mono);
   font-size: 0.72rem;

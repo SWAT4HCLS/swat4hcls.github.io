@@ -1,0 +1,67 @@
+name: Author profile submission
+description: Add or update your author page (requires a paper indexed in the SWAT4HCLS proceedings stream on dblp)
+title: "[author-profile] "
+labels: ["author-profile"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This form is for authors who have **already published** in the SWAT4HCLS / SWAT4LS
+        proceedings (indexed on [dblp](https://dblp.org/db/conf/swat4ls/)). An admin reviews
+        every submission before it's added to `assets/data/authors.jsonld` and published.
+  - type: input
+    id: dblp
+    attributes:
+      label: dblp profile URL
+      description: e.g. https://dblp.org/pid/09/2013 or https://dblp.org/pers/hd/r/Roos:Marco — used to verify your publication and as the unique identifier for your page.
+      placeholder: "https://dblp.org/pid/XX/XXXX"
+    validations:
+      required: true
+  - type: input
+    id: name
+    attributes:
+      label: Full name
+      description: As it should appear on your author page (can differ from your dblp display name).
+    validations:
+      required: true
+  - type: input
+    id: orcid
+    attributes:
+      label: ORCID iD
+      description: Optional, e.g. https://orcid.org/0000-0001-9114-8737
+      placeholder: "https://orcid.org/0000-0000-0000-0000"
+    validations:
+      required: false
+  - type: input
+    id: affiliation
+    attributes:
+      label: Affiliation
+    validations:
+      required: false
+  - type: textarea
+    id: bio
+    attributes:
+      label: Short bio
+      description: A few sentences, shown on your author page.
+    validations:
+      required: false
+  - type: input
+    id: homepage
+    attributes:
+      label: Website / homepage URL
+    validations:
+      required: false
+  - type: input
+    id: photo
+    attributes:
+      label: Photo URL
+      description: Link to a photo we can use on your profile (we'll pull it into the repo).
+    validations:
+      required: false
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Consent
+      options:
+        - label: I confirm this information may be published on the SWAT4HCLS website.
+          required: true

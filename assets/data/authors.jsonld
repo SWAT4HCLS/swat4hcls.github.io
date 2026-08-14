@@ -1,0 +1,14 @@
+{
+  "@context": {
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "schema": "https://schema.org/",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "name": "foaf:name",
+    "homepage": { "@id": "foaf:homepage", "@type": "@id" },
+    "depiction": { "@id": "foaf:depiction", "@type": "@id" },
+    "affiliation": "schema:affiliation",
+    "description": "schema:description",
+    "sameAs": { "@id": "owl:sameAs", "@type": "@id" }
+  },
+  "@graph": []
+}

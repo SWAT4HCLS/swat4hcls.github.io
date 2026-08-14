@@ -44,7 +44,7 @@
 
     <div class="contributors-wrap">
       <h2 style="margin-top:0">Most active contributors</h2>
-      <p style="margin-bottom:0">By papers indexed on dblp across all editions.</p>
+      <p style="margin-bottom:0">By papers indexed on dblp across all editions. Every name below and in the paper list links to an author page &mdash; <a href="https://github.com/SWAT4HCLS/swat4hcls.github.io/issues/new?template=author-profile.yml" target="_blank" rel="noopener">published authors can add a bio and links</a> to theirs.</p>
       <div class="contributor-list" id="contributors-root"></div>
     </div>
 
@@ -155,7 +155,7 @@
 <script>
 const ENDPOINT = "https://sparql.dblp.org/sparql";
 const QUERY = `PREFIX dblp: <https://dblp.org/rdf/schema#>
-SELECT ?publ ?year ?title (SAMPLE(?ee0) AS ?ee) (GROUP_CONCAT(DISTINCT ?authorName; separator="||") AS ?authors) WHERE {
+SELECT ?publ ?year ?title (SAMPLE(?ee0) AS ?ee) (GROUP_CONCAT(DISTINCT CONCAT(?authorName, "::", STR(?author)); separator="||") AS ?authors) WHERE {
   ?publ dblp:publishedInStream <https://dblp.org/streams/conf/swat4ls> ;
         dblp:title ?title ;
         dblp:yearOfEvent ?year ;
@@ -165,6 +165,14 @@ SELECT ?publ ?year ?title (SAMPLE(?ee0) AS ?ee) (GROUP_CONCAT(DISTINCT ?authorNa
 }
 GROUP BY ?publ ?year ?title
 ORDER BY DESC(?year) ?title`;
+
+function shortPid(fullPidUrl) {
+  return fullPidUrl.replace('https://dblp.org/pid/', '');
+}
+
+function authorLink(a) {
+  return `<a href="author.html?pid=${encodeURIComponent(shortPid(a.pid))}">${escapeHtml(a.name)}</a>`;
+}
 
 let allRows = [];
 
@@ -190,7 +198,7 @@ function render(rows) {
         <span class="paper-title">${r.ee ? `<a href="${r.ee}" target="_blank" rel="noopener">${escapeHtml(r.title)}</a>` : escapeHtml(r.title)}</span>
         <a class="paper-dblp" href="${r.dblp}" target="_blank" rel="noopener">[dblp]</a>
         <button class="paper-cite-btn" type="button" data-dblp="${r.dblp}" data-target="${citeId}">Cite</button>
-        <span class="paper-authors">${r.authors.map(escapeHtml).join(', ')}</span>
+        <span class="paper-authors">${r.authors.map(authorLink).join(', ')}</span>
         <div class="cite-box" id="${citeId}" hidden></div>
       </li>`;
     }).join('');
@@ -204,16 +212,18 @@ function render(rows) {
 function renderContributors(rows) {
   const counts = new Map();
   rows.forEach(r => {
-    r.authors.forEach(name => {
-      if (!name) return;
-      counts.set(name, (counts.get(name) || 0) + 1);
+    r.authors.forEach(a => {
+      if (!a.pid) return;
+      const entry = counts.get(a.pid) || { name: a.name, n: 0 };
+      entry.n++;
+      counts.set(a.pid, entry);
     });
   });
   const top = [...counts.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .sort((a, b) => b[1].n - a[1].n || a[1].name.localeCompare(b[1].name))
     .slice(0, 24);
-  document.getElementById('contributors-root').innerHTML = top.map(([name, n]) =>
-    `<span class="contributor-chip">${escapeHtml(name)} <span class="count">${n}</span></span>`
+  document.getElementById('contributors-root').innerHTML = top.map(([pid, entry]) =>
+    `<a class="contributor-chip" href="author.html?pid=${encodeURIComponent(shortPid(pid))}">${escapeHtml(entry.name)} <span class="count">${entry.n}</span></a>`
   ).join('');
 }
 
@@ -281,7 +291,10 @@ async function loadProceedings() {
       year: b.year.value,
       ee: b.ee ? b.ee.value : null,
       dblp: b.publ.value,
-      authors: b.authors ? b.authors.value.split('||') : []
+      authors: b.authors ? b.authors.value.split('||').map(pair => {
+        const [name, pid] = pair.split('::');
+        return { name, pid };
+      }) : []
     }));
     render(allRows);
     renderContributors(allRows);

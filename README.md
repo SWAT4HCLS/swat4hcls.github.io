@@ -23,8 +23,11 @@ biohackathon.html
 sponsorship.html
 organization.html
 proceedings.html              Live query against dblp's public SPARQL endpoint
+author.html                   Per-author page, ?pid=<dblp pid> (e.g. author.html?pid=09/2013)
 assets/css/style.css
 assets/images/
+assets/data/authors.jsonld    Extended author profiles (JSON-LD), admin-curated
+.github/ISSUE_TEMPLATE/author-profile.yml   Submission form for author profiles
 ```
 
 `programme.html`, `tutorials.html`, `keynotes.html`, and `accepted-submissions.html`
@@ -36,6 +39,53 @@ share a small sub-nav and are meant to be edited as a group.
 `https://sparql.dblp.org/sparql` in the visitor's browser at load time, against
 dblp's `conf/swat4ls` stream, and renders the results grouped by year. Nothing to
 update by hand when new papers get indexed by dblp.
+
+## Author pages
+
+`author.html?pid=<dblp pid>` (e.g. `author.html?pid=09/2013`) is a single template
+for every author, not a page per person. On load it:
+
+1. Fetches `assets/data/authors.jsonld` and looks for a node whose `@id` matches
+   the full dblp PID URI (`https://dblp.org/pid/<pid>`).
+2. Runs a live SPARQL query for that PID's papers and co-authors in the
+   `conf/swat4ls` stream (same pattern as `proceedings.html`).
+3. Renders whichever of the two it finds: dblp alone gives a working page
+   (papers, co-authors, dblp link) with no submitted profile; a matching
+   `authors.jsonld` node adds a photo, bio, affiliation, homepage, and ORCID.
+
+Every author name on `proceedings.html` (paper lists and the contributor chips)
+links to `author.html?pid=...`, whether or not that person has submitted a profile.
+
+### Adding a profile
+
+Authors request an addition via the **"Author profile submission"** GitHub issue
+template (`.github/ISSUE_TEMPLATE/author-profile.yml`), which asks for their dblp
+profile URL (to identify the PID), name, ORCID, affiliation, bio, homepage, and a
+photo URL. An admin verifies the dblp link, then adds/updates one node in
+`assets/data/authors.jsonld`:
+
+```json
+{
+  "@id": "https://dblp.org/pid/09/2013",
+  "@type": "foaf:Person",
+  "name": "Marco Roos",
+  "sameAs": "https://orcid.org/0000-0000-0000-0000",
+  "affiliation": "Leiden University Medical Center",
+  "description": "Short bio text.",
+  "homepage": "https://example.org/~roos",
+  "depiction": "assets/images/authors/marco-roos.jpg"
+}
+```
+
+The file is genuine JSON-LD (FOAF/schema.org/OWL vocabulary, `@id` reuses dblp's
+own PID URI) but needs no library to read — `author.html` just does
+`fetch().then(r => r.json())` and treats `@graph` as an array. Commit and push;
+no build step.
+
+**Not yet built:** self-service editing via ORCID login. That needs a small
+backend (OAuth token exchange + authenticated writes to this repo) that a static
+GitHub Pages site can't provide alone — out of scope until that's stood up
+separately. For now all edits go through the issue-review flow above.
 
 ## Editing content
 
