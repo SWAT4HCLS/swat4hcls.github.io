@@ -10,7 +10,7 @@
 
 <header class="site-header">
   <div class="wrap nav-bar">
-    <span class="logo"><span class="prompt">swat4hcls</span>@basel2027<span class="cursor"></span></span>
+    <span class="logo"><img class="brand-mark" src="assets/images/logo-icon.png" alt="SWAT4HCLS logo"><span class="prompt">swat4hcls</span>@basel2027<span class="cursor"></span></span>
     <nav class="main-nav">
       <a href="index.html">Basel 2027</a>
       <a href="programme.html">Programme</a>
@@ -28,7 +28,7 @@
 <div class="wrap">
   <div class="legacy-notice">
     <span class="glyph">&gt;</span>
-    <span>This page is <strong>not</strong> maintained by hand &mdash; it queries <a href="https://sparql.dblp.org/" target="_blank" rel="noopener">dblp&rsquo;s public SPARQL endpoint</a> live, in your browser, for every paper dblp has indexed under the <a href="https://dblp.org/db/conf/swat4ls/" target="_blank" rel="noopener">SWAT4HCLS proceedings stream</a>. No database, no manual updates.</span>
+    <span>This page is <strong>not</strong> maintained by hand &mdash; it queries <a href="https://sparql.dblp.org/" target="_blank" rel="noopener">dblp&rsquo;s public SPARQL endpoint</a> live, in your browser, for every paper dblp has indexed under the <a href="https://dblp.org/db/conf/swat4ls/" target="_blank" rel="noopener">SWAT4HCLS proceedings stream</a>. No database, no manual updates. Papers are grouped by the year the conference actually took place (dblp&rsquo;s <code>yearOfEvent</code>), not the year CEUR-WS got around to publishing the volume &mdash; that can lag by over a year.</span>
   </div>
 </div>
 
@@ -49,7 +49,8 @@
     <div class="card" style="margin-top:32px">
       Missing a paper, or want the raw data? Run the query yourself at
       <a href="https://sparql.dblp.org/" target="_blank" rel="noopener">sparql.dblp.org</a>
-      against <code>dblp:publishedInStream &lt;https://dblp.org/streams/conf/swat4ls&gt;</code>,
+      against <code>dblp:publishedInStream &lt;https://dblp.org/streams/conf/swat4ls&gt;</code>
+      (grouped here by <code>dblp:yearOfEvent</code>),
       or browse the CEUR-WS volumes linked from the
       <a href="https://www.swat4ls.org/about/" target="_blank" rel="noopener">archive</a>.
     </div>
@@ -105,6 +106,44 @@
   .paper-title a { font-weight: 500; }
   .paper-authors { display: block; color: var(--text-dim); font-size: 0.85rem; margin-top: 2px; }
   .paper-dblp { margin-left: 8px; font-family: var(--mono); font-size: 0.75rem; color: var(--text-dim); }
+  .paper-cite-btn {
+    margin-left: 8px;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 7px;
+    cursor: pointer;
+  }
+  .paper-cite-btn:hover { background: var(--bg-raised); }
+  .cite-box {
+    margin: 8px 0 0;
+    padding: 10px 12px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .cite-box pre {
+    margin: 0 0 8px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--text);
+  }
+  .cite-copy-btn {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 8px;
+    cursor: pointer;
+  }
+  .cite-copy-btn:hover { color: var(--text); }
 </style>
 
 <script>
@@ -113,7 +152,7 @@ const QUERY = `PREFIX dblp: <https://dblp.org/rdf/schema#>
 SELECT ?publ ?year ?title (SAMPLE(?ee0) AS ?ee) (GROUP_CONCAT(DISTINCT ?authorName; separator="||") AS ?authors) WHERE {
   ?publ dblp:publishedInStream <https://dblp.org/streams/conf/swat4ls> ;
         dblp:title ?title ;
-        dblp:yearOfPublication ?year ;
+        dblp:yearOfEvent ?year ;
         dblp:authoredBy ?author .
   ?author dblp:primaryCreatorName ?authorName .
   OPTIONAL { ?publ dblp:documentPage ?ee0 }
@@ -136,19 +175,77 @@ function render(rows) {
   document.getElementById('proc-stats').textContent =
     rows.length + ' papers across ' + years.length + ' editions — live from dblp.org';
 
+  let citeIdx = 0;
   root.innerHTML = years.map((y, i) => {
-    const items = byYear[y].map(r => `
+    const items = byYear[y].map(r => {
+      const citeId = 'cite-' + (citeIdx++);
+      return `
       <li>
         <span class="paper-title">${r.ee ? `<a href="${r.ee}" target="_blank" rel="noopener">${escapeHtml(r.title)}</a>` : escapeHtml(r.title)}</span>
         <a class="paper-dblp" href="${r.dblp}" target="_blank" rel="noopener">[dblp]</a>
+        <button class="paper-cite-btn" type="button" data-dblp="${r.dblp}" data-target="${citeId}">Cite</button>
         <span class="paper-authors">${r.authors.map(escapeHtml).join(', ')}</span>
-      </li>`).join('');
+        <div class="cite-box" id="${citeId}" hidden></div>
+      </li>`;
+    }).join('');
     return `<details class="year-group"${i === 0 ? ' open' : ''}>
       <summary>${y} <span class="count">(${byYear[y].length} papers)</span></summary>
       <ul class="paper-list">${items}</ul>
     </details>`;
   }).join('');
 }
+
+const citeCache = new Map();
+
+async function toggleCite(btn) {
+  const dblpUrl = btn.dataset.dblp;
+  const box = document.getElementById(btn.dataset.target);
+  if (!box.hidden) { box.hidden = true; return; }
+  box.hidden = false;
+  if (citeCache.has(dblpUrl)) {
+    fillCiteBox(box, citeCache.get(dblpUrl));
+    return;
+  }
+  box.innerHTML = '<pre>Loading citation&hellip;</pre>';
+  try {
+    const res = await fetch(dblpUrl + '.bib', { headers: { Accept: 'text/plain' } });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const bib = (await res.text()).trim();
+    citeCache.set(dblpUrl, bib);
+    fillCiteBox(box, bib);
+  } catch (err) {
+    box.innerHTML = '<pre>Could not load citation from dblp.</pre>';
+    const link = document.createElement('a');
+    link.href = dblpUrl;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = 'View on dblp for BibTeX / RIS / XML export';
+    box.appendChild(link);
+  }
+}
+
+function fillCiteBox(box, bibtext) {
+  box.innerHTML = '';
+  const pre = document.createElement('pre');
+  pre.textContent = bibtext;
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'cite-copy-btn';
+  copyBtn.type = 'button';
+  copyBtn.textContent = 'Copy BibTeX';
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(bibtext).then(() => {
+      copyBtn.textContent = 'Copied!';
+      setTimeout(() => { copyBtn.textContent = 'Copy BibTeX'; }, 1500);
+    });
+  });
+  box.appendChild(pre);
+  box.appendChild(copyBtn);
+}
+
+document.getElementById('proc-root').addEventListener('click', e => {
+  const btn = e.target.closest('.paper-cite-btn');
+  if (btn) toggleCite(btn);
+});
 
 async function loadProceedings() {
   const root = document.getElementById('proc-root');
