@@ -1,0 +1,65 @@
+name: Company vacancy listing
+description: List a job opening as an organization (paid listing or micro-sponsorship — arranged separately)
+title: "[company-vacancy] "
+labels: ["company-vacancy"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Company vacancy listings are **not free** — they require either a one-time listing
+        fee or an active SWAT4HCLS micro-sponsorship. This form does not collect payment.
+        Contact [swat4hcls@gmail.com](mailto:swat4hcls@gmail.com) first to arrange that; an
+        admin will only merge the pull request this form generates once payment or
+        sponsorship status is confirmed. (Alumni who've published in the proceedings can
+        post job openings for free via the "Author page announcement" form instead.)
+  - type: input
+    id: company
+    attributes:
+      label: Company / organization name
+    validations:
+      required: true
+  - type: input
+    id: companyUrl
+    attributes:
+      label: Company website
+    validations:
+      required: false
+  - type: input
+    id: contact
+    attributes:
+      label: Contact email
+      description: For our records — not published unless you include it in the listing details.
+    validations:
+      required: true
+  - type: input
+    id: headline
+    attributes:
+      label: Job title / headline
+    validations:
+      required: true
+  - type: textarea
+    id: text
+    attributes:
+      label: Details
+    validations:
+      required: true
+  - type: input
+    id: applyUrl
+    attributes:
+      label: Application link
+    validations:
+      required: false
+  - type: input
+    id: validThrough
+    attributes:
+      label: Show until (YYYY-MM-DD)
+      placeholder: "2027-06-30"
+    validations:
+      required: false
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Confirmation
+      options:
+        - label: I understand this listing will not be published until an admin confirms payment or micro-sponsorship status, and that this may take a few days.
+          required: true

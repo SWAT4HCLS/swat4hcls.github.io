@@ -1,0 +1,15 @@
+{
+  "@context": {
+    "schema": "https://schema.org/",
+    "headline": "schema:headline",
+    "text": "schema:text",
+    "datePosted": "schema:datePosted",
+    "validThrough": "schema:validThrough",
+    "url": { "@id": "schema:url", "@type": "@id" },
+    "author": { "@id": "schema:author", "@type": "@id" },
+    "postType": "schema:additionalType",
+    "hiringOrganization": "schema:hiringOrganization",
+    "name": "schema:name"
+  },
+  "@graph": []
+}

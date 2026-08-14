@@ -191,6 +191,32 @@ a.contributor-chip:hover { border-color: var(--accent); text-decoration: none; }
   padding: 1px 6px;
 }
 
+/* ---- Posts / vacancies ---- */
+.post-card {
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+}
+.post-type-tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  color: var(--accent-dim);
+}
+.post-meta {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin: 6px 0 8px;
+}
+
 /* ---- Legacy notice ---- */
 .legacy-notice {
   display: flex;

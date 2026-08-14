@@ -1,0 +1,58 @@
+name: Process company vacancy listing
+
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  process:
+    if: contains(github.event.issue.labels.*.name, 'company-vacancy')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse issue and append to posts.jsonld
+        id: process
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: python3 .github/scripts/process_company_vacancy.py
+
+      - name: Open pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          set -e
+          git config user.name "swat4hcls-bot"
+          git config user.email "actions@github.com"
+
+          BRANCH="company-vacancy/issue-${ISSUE_NUMBER}-${{ steps.process.outputs.slug }}"
+          git checkout -b "$BRANCH"
+          git add -A
+          git commit -m "Company vacancy from ${{ steps.process.outputs.company }}: ${{ steps.process.outputs.headline }} (#${ISSUE_NUMBER})"
+          git push origin "$BRANCH"
+
+          gh pr create \
+            --title "⚠ UNPAID vacancy: ${{ steps.process.outputs.headline }} (${{ steps.process.outputs.company }})" \
+            --body "Closes #${ISSUE_NUMBER}
+
+          **Do not merge until payment or micro-sponsorship status is confirmed for ${{ steps.process.outputs.company }}.**
+          This is auto-generated straight from the issue form — nothing here has been verified.
+          Check the issue for their contact email, confirm payment/sponsorship separately, then merge." \
+            --label company-vacancy \
+            --base main \
+            --head "$BRANCH"
+
+      - name: Comment on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --body "Couldn't process this submission automatically — check the [workflow run](../../actions) for details (usually a missing required field)."

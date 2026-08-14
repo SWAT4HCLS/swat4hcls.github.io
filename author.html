@@ -21,6 +21,7 @@
       <a href="sponsorship.html">Sponsorship</a>
       <a href="organization.html">Organization</a>
       <a href="proceedings.html">Proceedings</a>
+      <a href="vacancies.html">Vacancies</a>
     </nav>
   </div>
 </header>
@@ -118,13 +119,19 @@ GROUP BY ?publ ?year ?title ?ee
 ORDER BY DESC(?year)`;
 
   try {
-    const [profileResp, nameRes, papersRes] = await Promise.all([
+    const [profileResp, postsResp, nameRes, papersRes] = await Promise.all([
       fetch('assets/data/authors.jsonld').then(r => r.json()),
+      fetch('assets/data/posts.jsonld').then(r => r.json()),
       fetch(ENDPOINT + '?query=' + encodeURIComponent(nameQuery), { headers: { Accept: 'application/sparql-results+json' } }).then(r => r.json()),
       fetch(ENDPOINT + '?query=' + encodeURIComponent(papersQuery), { headers: { Accept: 'application/sparql-results+json' } }).then(r => r.json())
     ]);
 
     const profile = (profileResp['@graph'] || []).find(node => node['@id'] === fullPid);
+    const today = new Date().toISOString().slice(0, 10);
+    const posts = (postsResp['@graph'] || [])
+      .filter(p => p.author === fullPid)
+      .filter(p => !p.validThrough || p.validThrough >= today)
+      .sort((a, b) => (b.datePosted || '').localeCompare(a.datePosted || ''));
     const dblpName = nameRes.results.bindings[0] ? nameRes.results.bindings[0].name.value : null;
 
     const papers = papersRes.results.bindings.map(b => ({
@@ -144,14 +151,14 @@ ORDER BY DESC(?year)`;
       return;
     }
 
-    render(fullPid, profile, dblpName, papers);
+    render(fullPid, profile, dblpName, papers, posts);
   } catch (err) {
     root.innerHTML = '<div class="coming-soon">Could not load author data (' + escapeHtml(err.message) + '). ' +
       'Try the <a href="https://dblp.org/pid/' + escapeHtml(shortPid(fullPid)) + '" target="_blank" rel="noopener">dblp record</a> directly.</div>';
   }
 }
 
-function render(fullPid, profile, dblpName, papers) {
+function render(fullPid, profile, dblpName, papers, posts) {
   const displayName = (profile && profile.name) || dblpName || 'Unknown author';
   document.getElementById('page-title').textContent = displayName + ' – SWAT4HCLS';
 
@@ -186,6 +193,20 @@ function render(fullPid, profile, dblpName, papers) {
       <span class="paper-authors mono">${p.year} &middot; <a href="${p.dblp}" target="_blank" rel="noopener">dblp</a></span>
     </li>`).join('');
 
+  const POST_TYPE_LABELS = {
+    'job-posting': 'Job posting',
+    'looking-for-work': 'Looking for work',
+    'work-update': 'Work update',
+    'announcement': 'Announcement'
+  };
+  const postsHtml = posts.map(p => `
+    <div class="post-card">
+      <span class="post-type-tag">${escapeHtml(POST_TYPE_LABELS[p.postType] || 'Announcement')}</span>
+      <h3 style="margin:6px 0 4px">${p.url ? `<a href="${escapeHtml(p.url)}" target="_blank" rel="noopener">${escapeHtml(p.headline)}</a>` : escapeHtml(p.headline)}</h3>
+      <p class="mono" style="font-size:0.78rem;color:var(--text-dim);margin:0 0 8px">${escapeHtml(p.datePosted || '')}${p.validThrough ? ' &middot; open until ' + escapeHtml(p.validThrough) : ''}</p>
+      <p style="margin:0">${escapeHtml(p.text)}</p>
+    </div>`).join('');
+
   root.innerHTML = `
     <div class="author-header">
       ${photoHtml}
@@ -200,6 +221,12 @@ function render(fullPid, profile, dblpName, papers) {
 
     ${!profile ? `<div class="no-profile-note">No extended profile has been submitted for ${escapeHtml(displayName)} yet.
       <a href="https://github.com/SWAT4HCLS/swat4hcls.github.io/issues/new?template=author-profile.yml" target="_blank" rel="noopener">Is this you? Submit your profile.</a></div>` : ''}
+
+    ${profile ? `
+    <h2>Announcements ${posts.length ? `<span class="mono" style="font-weight:400;color:var(--text-dim);font-size:0.9rem">(${posts.length})</span>` : ''}</h2>
+    ${postsHtml || '<p style="color:var(--text-dim)">No announcements yet.</p>'}
+    <p style="margin-top:${posts.length ? '14px' : '0'}"><a href="https://github.com/SWAT4HCLS/swat4hcls.github.io/issues/new?template=author-post.yml" target="_blank" rel="noopener">Post an update to this page &rarr;</a></p>
+    ` : ''}
 
     <h2>Papers at SWAT4HCLS <span class="mono" style="font-weight:400;color:var(--text-dim);font-size:0.9rem">(${papers.length})</span></h2>
     <ul class="paper-list">${papersHtml || '<li>No papers found in the SWAT4HCLS proceedings stream on dblp.</li>'}</ul>

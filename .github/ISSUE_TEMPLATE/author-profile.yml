@@ -7,13 +7,18 @@ body:
     attributes:
       value: |
         This form is for authors who have **already published** in the SWAT4HCLS / SWAT4LS
-        proceedings (indexed on [dblp](https://dblp.org/db/conf/swat4ls/)). An admin reviews
-        every submission before it's added to `assets/data/authors.jsonld` and published.
+        proceedings (indexed on [dblp](https://dblp.org/db/conf/swat4ls/)). Submitting opens
+        a pull request automatically; an admin still reviews and merges it before anything is
+        published.
   - type: input
     id: dblp
     attributes:
       label: dblp profile URL
-      description: e.g. https://dblp.org/pid/09/2013 or https://dblp.org/pers/hd/r/Roos:Marco — used to verify your publication and as the unique identifier for your page.
+      description: >
+        Must be your canonical dblp person URL in the form https://dblp.org/pid/XX/XXXX
+        (find it by clicking your name on any of your dblp-listed papers). This is used both
+        to verify your publication and as the unique identifier for your page — submissions
+        in any other URL format can't be processed automatically.
       placeholder: "https://dblp.org/pid/XX/XXXX"
     validations:
       required: true
@@ -51,11 +56,14 @@ body:
       label: Website / homepage URL
     validations:
       required: false
-  - type: input
+  - type: textarea
     id: photo
     attributes:
-      label: Photo URL
-      description: Link to a photo we can use on your profile (we'll pull it into the repo).
+      label: Photo
+      description: >
+        Either paste a direct image URL, or drag an image file into this box — GitHub will
+        upload it and insert a link automatically. Either way, we'll pull the image into the
+        repo rather than hotlink it.
     validations:
       required: false
   - type: checkboxes

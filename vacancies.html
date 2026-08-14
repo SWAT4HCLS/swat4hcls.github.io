@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vacancies &ndash; SWAT4HCLS Basel 2027</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap nav-bar">
+    <span class="logo"><img class="brand-mark" src="assets/images/logo-icon.png" alt="SWAT4HCLS logo"><span class="prompt">swat4hcls</span>@basel2027<span class="cursor"></span></span>
+    <nav class="main-nav">
+      <a href="index.html">Basel 2027</a>
+      <a href="programme.html">Programme</a>
+      <a href="faq.html">FAQ</a>
+      <a href="call-for-papers.html">Call for papers</a>
+      <a href="registration.html">Registration</a>
+      <a href="biohackathon.html">Biohackathon</a>
+      <a href="sponsorship.html">Sponsorship</a>
+      <a href="organization.html">Organization</a>
+      <a href="proceedings.html">Proceedings</a>
+      <a href="vacancies.html" class="active">Vacancies</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="legacy-notice">
+    <span class="glyph">&gt;</span>
+    <span>Listings are read live from <a href="assets/data/posts.jsonld" target="_blank" rel="noopener">posts.jsonld</a>. Alumni who&rsquo;ve published at SWAT4HCLS can post job openings and availability for free; company listings require a paid slot or micro-sponsorship, confirmed by an admin before publishing.</span>
+  </div>
+</div>
+
+<div class="wrap page-layout">
+  <main>
+    <h1 class="page-title">Vacancies</h1>
+    <p class="subdate" id="vac-stats">Loading&hellip;</p>
+
+    <h2 style="margin-top:0">Open positions</h2>
+    <div id="jobs-root"><div class="coming-soon">Loading&hellip;</div></div>
+
+    <h2>Available for hire</h2>
+    <div id="looking-root"><div class="coming-soon">Loading&hellip;</div></div>
+  </main>
+
+  <aside class="sidebar">
+    <section>
+      <h3>Post a listing</h3>
+      <ul>
+        <li><a href="https://github.com/SWAT4HCLS/swat4hcls.github.io/issues/new?template=author-post.yml" target="_blank" rel="noopener">Alumni: post free (job, availability, update)</a></li>
+        <li><a href="https://github.com/SWAT4HCLS/swat4hcls.github.io/issues/new?template=company-vacancy.yml" target="_blank" rel="noopener">Company: list a vacancy (paid)</a></li>
+        <li><a href="sponsorship.html">About micro-sponsorship</a></li>
+      </ul>
+    </section>
+    <section>
+      <h3>Links</h3>
+      <ul>
+        <li><a href="proceedings.html">Proceedings</a></li>
+        <li><a href="mailto:swat4hcls@gmail.com">Contact</a></li>
+      </ul>
+    </section>
+  </aside>
+</div>
+
+<footer class="site-footer">
+  <div class="wrap">
+    &copy; 2008&ndash;2027 The Organizers &middot; Past editions archived at <a href="https://www.swat4ls.org">swat4ls.org</a>
+  </div>
+</footer>
+
+<script>
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function shortPid(fullPidUrl) {
+  return fullPidUrl.replace('https://dblp.org/pid/', '');
+}
+
+function postedByHtml(p) {
+  if (p.hiringOrganization) {
+    const org = p.hiringOrganization;
+    const label = org.url
+      ? `<a href="${escapeHtml(org.url)}" target="_blank" rel="noopener">${escapeHtml(org.name)}</a>`
+      : escapeHtml(org.name);
+    return `${label} <span class="post-type-tag" style="margin-left:6px">Company listing</span>`;
+  }
+  if (p.author) {
+    return `<a href="author.html?pid=${encodeURIComponent(shortPid(p.author))}">${escapeHtml(p.authorName || 'View profile')}</a>`;
+  }
+  return 'Unknown';
+}
+
+function card(p) {
+  return `
+    <div class="post-card">
+      <h3 style="margin:0 0 4px">${p.url ? `<a href="${escapeHtml(p.url)}" target="_blank" rel="noopener">${escapeHtml(p.headline)}</a>` : escapeHtml(p.headline)}</h3>
+      <p class="post-meta">Posted by ${postedByHtml(p)} &middot; ${escapeHtml(p.datePosted || '')}${p.validThrough ? ' &middot; open until ' + escapeHtml(p.validThrough) : ''}</p>
+      <p style="margin:0">${escapeHtml(p.text)}</p>
+    </div>`;
+}
+
+async function load() {
+  try {
+    const [postsResp, authorsResp] = await Promise.all([
+      fetch('assets/data/posts.jsonld').then(r => r.json()),
+      fetch('assets/data/authors.jsonld').then(r => r.json())
+    ]);
+
+    const nameByPid = new Map((authorsResp['@graph'] || []).map(a => [a['@id'], a.name]));
+    const today = new Date().toISOString().slice(0, 10);
+
+    const live = (postsResp['@graph'] || [])
+      .filter(p => !p.validThrough || p.validThrough >= today)
+      .map(p => ({ ...p, authorName: p.author ? nameByPid.get(p.author) : null }))
+      .sort((a, b) => (b.datePosted || '').localeCompare(a.datePosted || ''));
+
+    const jobs = live.filter(p => p.postType === 'job-posting');
+    const looking = live.filter(p => p.postType === 'looking-for-work');
+
+    document.getElementById('vac-stats').textContent =
+      jobs.length + ' open position' + (jobs.length === 1 ? '' : 's') + ' · ' +
+      looking.length + ' available for hire';
+
+    document.getElementById('jobs-root').innerHTML =
+      jobs.map(card).join('') || '<p style="color:var(--text-dim)">No open positions right now.</p>';
+    document.getElementById('looking-root').innerHTML =
+      looking.map(card).join('') || '<p style="color:var(--text-dim)">No one has listed themselves as available right now.</p>';
+  } catch (err) {
+    document.getElementById('vac-stats').textContent = 'Could not load listings';
+    document.getElementById('jobs-root').innerHTML =
+      '<div class="coming-soon">Could not load ' +
+      '<a href="assets/data/posts.jsonld">posts.jsonld</a> (' + escapeHtml(err.message) + ').</div>';
+    document.getElementById('looking-root').innerHTML = '';
+  }
+}
+
+load();
+</script>
+
+</body>
+</html>

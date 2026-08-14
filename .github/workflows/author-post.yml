@@ -1,0 +1,56 @@
+name: Process author page announcement
+
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  process:
+    if: contains(github.event.issue.labels.*.name, 'author-post')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse issue and append to posts.jsonld
+        id: process
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: python3 .github/scripts/process_author_post.py
+
+      - name: Open pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          set -e
+          git config user.name "swat4hcls-bot"
+          git config user.email "actions@github.com"
+
+          BRANCH="author-post/issue-${ISSUE_NUMBER}-${{ steps.process.outputs.slug }}"
+          git checkout -b "$BRANCH"
+          git add -A
+          git commit -m "Post from ${{ steps.process.outputs.author_name }}: ${{ steps.process.outputs.headline }} (#${ISSUE_NUMBER})"
+          git push origin "$BRANCH"
+
+          gh pr create \
+            --title "Author post: ${{ steps.process.outputs.headline }} (${{ steps.process.outputs.author_name }})" \
+            --body "Closes #${ISSUE_NUMBER}
+
+          Auto-generated from the author-post issue form. Review the addition to \`assets/data/posts.jsonld\` before merging — this is what stops anyone else posting to someone else's page, since there's no login step." \
+            --label author-post \
+            --base main \
+            --head "$BRANCH"
+
+      - name: Comment on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --body "Couldn't process this submission automatically — check the [workflow run](../../actions) for details. This usually means the dblp URL doesn't match an existing author profile yet (submit an \"Author profile submission\" issue first), or a required field is missing."

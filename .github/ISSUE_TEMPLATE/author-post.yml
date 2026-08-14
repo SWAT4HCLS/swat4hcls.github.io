@@ -1,0 +1,67 @@
+name: Author page announcement
+description: Post an update to your existing author page (looking for work, a job opening, a work update)
+title: "[author-post] "
+labels: ["author-post"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is for authors who **already have a profile** on this site (submitted via the
+        "Author profile submission" form). Posts are appended to your existing page, newest
+        first. Submitting opens a pull request automatically; an admin still reviews and
+        merges it before anything is published — same as profile submissions, there's no
+        login step, so review is what stops anyone else posting to your page.
+  - type: input
+    id: dblp
+    attributes:
+      label: Your dblp profile URL
+      description: Must match the one on your existing author profile, e.g. https://dblp.org/pid/09/2013
+      placeholder: "https://dblp.org/pid/XX/XXXX"
+    validations:
+      required: true
+  - type: dropdown
+    id: type
+    attributes:
+      label: Post type
+      options:
+        - Announcement
+        - Looking for work
+        - Job posting
+        - Work update
+    validations:
+      required: true
+  - type: input
+    id: headline
+    attributes:
+      label: Headline
+      description: A short title for the post.
+    validations:
+      required: true
+  - type: textarea
+    id: text
+    attributes:
+      label: Details
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Link
+      description: Optional — job ad, project page, anything relevant.
+    validations:
+      required: false
+  - type: input
+    id: validThrough
+    attributes:
+      label: Show until (YYYY-MM-DD)
+      description: Optional — mainly for job postings. Left blank, the post stays up indefinitely.
+      placeholder: "2027-06-30"
+    validations:
+      required: false
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Consent
+      options:
+        - label: I confirm this information may be published on the SWAT4HCLS website.
+          required: true

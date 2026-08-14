@@ -1,0 +1,62 @@
+name: Process author profile submission
+
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  process:
+    if: contains(github.event.issue.labels.*.name, 'author-profile')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse issue and update authors.jsonld
+        id: process
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: python3 .github/scripts/process_author_issue.py
+
+      - name: Open pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          set -e
+          git config user.name "swat4hcls-bot"
+          git config user.email "actions@github.com"
+
+          BRANCH="author-profile/issue-${ISSUE_NUMBER}-${{ steps.process.outputs.slug }}"
+          git checkout -b "$BRANCH"
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            gh issue comment "$ISSUE_NUMBER" --body "No changes detected for this submission — it may already match what's published."
+            exit 0
+          fi
+
+          git commit -m "${{ steps.process.outputs.action }} author profile: ${{ steps.process.outputs.name }} (#${ISSUE_NUMBER})"
+          git push origin "$BRANCH"
+
+          gh pr create \
+            --title "Author profile: ${{ steps.process.outputs.name }}" \
+            --body "Closes #${ISSUE_NUMBER}
+
+          Auto-generated from the author-profile issue form. Review the diff to \`assets/data/authors.jsonld\` (and any new photo under \`assets/images/authors/\`) before merging." \
+            --label author-profile \
+            --base main \
+            --head "$BRANCH"
+
+      - name: Comment on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --body "Couldn't process this submission automatically — check the [workflow run](../../actions) for details (usually a malformed dblp URL or a missing required field). An admin will need to add this profile by hand, see \`README.md#author-pages\`."
