@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proceedings &ndash; SWAT4HCLS Basel 2027</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap nav-bar">
+    <span class="logo"><span class="prompt">swat4hcls</span>@basel2027<span class="cursor"></span></span>
+    <nav class="main-nav">
+      <a href="index.html">Basel 2027</a>
+      <a href="programme.html">Programme</a>
+      <a href="faq.html">FAQ</a>
+      <a href="call-for-papers.html">Call for papers</a>
+      <a href="registration.html">Registration</a>
+      <a href="biohackathon.html">Biohackathon</a>
+      <a href="sponsorship.html">Sponsorship</a>
+      <a href="organization.html">Organization</a>
+      <a href="proceedings.html" class="active">Proceedings</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="legacy-notice">
+    <span class="glyph">&gt;</span>
+    <span>This page is <strong>not</strong> maintained by hand &mdash; it queries <a href="https://sparql.dblp.org/" target="_blank" rel="noopener">dblp&rsquo;s public SPARQL endpoint</a> live, in your browser, for every paper dblp has indexed under the <a href="https://dblp.org/db/conf/swat4ls/" target="_blank" rel="noopener">SWAT4HCLS proceedings stream</a>. No database, no manual updates.</span>
+  </div>
+</div>
+
+<div class="wrap page-layout">
+  <main>
+    <h1 class="page-title">Proceedings</h1>
+    <p class="subdate" id="proc-stats">Loading from dblp.org&hellip;</p>
+
+    <input id="proc-search" type="text" placeholder="Filter by title or author&hellip;"
+      style="width:100%;padding:9px 12px;font-family:var(--mono);font-size:0.9rem;
+             background:var(--bg-raised);border:1px solid var(--border);border-radius:6px;
+             color:var(--text);margin-bottom:20px;">
+
+    <div id="proc-root">
+      <div class="coming-soon">Querying sparql.dblp.org&hellip;</div>
+    </div>
+
+    <div class="card" style="margin-top:32px">
+      Missing a paper, or want the raw data? Run the query yourself at
+      <a href="https://sparql.dblp.org/" target="_blank" rel="noopener">sparql.dblp.org</a>
+      against <code>dblp:publishedInStream &lt;https://dblp.org/streams/conf/swat4ls&gt;</code>,
+      or browse the CEUR-WS volumes linked from the
+      <a href="https://www.swat4ls.org/about/" target="_blank" rel="noopener">archive</a>.
+    </div>
+  </main>
+
+  <aside class="sidebar">
+    <section>
+      <h3>Links</h3>
+      <ul>
+        <li><a href="https://dblp.org/db/conf/swat4ls/" target="_blank" rel="noopener">SWAT4HCLS on dblp</a></li>
+        <li><a href="https://www.swat4ls.org/about/" target="_blank" rel="noopener">About SWAT4HCLS (history)</a></li>
+        <li><a href="mailto:swat4hcls@gmail.com">Contact</a></li>
+      </ul>
+    </section>
+    <section>
+      <h3>Follow us</h3>
+      <div class="social-icons">
+        <a href="https://genomic.social/@swat4hcls" target="_blank" rel="noopener"><img src="assets/images/icon-mastodon.png" alt="SWAT4HCLS on Mastodon"></a>
+        <a href="https://bsky.app/profile/swat4hcls.bsky.social" target="_blank" rel="noopener"><img src="assets/images/icon-bluesky.png" alt="SWAT4HCLS on Bluesky"></a>
+        <a href="https://www.youtube.com/channel/UCO65ployuRweYHpRFeVe1Mg" target="_blank" rel="noopener"><img src="assets/images/icon-youtube.png" alt="SWAT4HCLS on Youtube"></a>
+      </div>
+    </section>
+    <section>
+      <h3>Sponsors &ndash; SWAT4HCLS 2027</h3>
+      <p><a href="mailto:swat4hcls@gmail.com">Contact us</a> for more information, or see the <a href="sponsorship.html">sponsorship page</a>.</p>
+    </section>
+  </aside>
+</div>
+
+<footer class="site-footer">
+  <div class="wrap">
+    &copy; 2008&ndash;2027 The Organizers &middot; Past editions archived at <a href="https://www.swat4ls.org">swat4ls.org</a>
+  </div>
+</footer>
+
+<style>
+  .year-group { border-bottom: 1px solid var(--border); padding: 4px 0; }
+  .year-group summary {
+    cursor: pointer;
+    padding: 12px 4px;
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 1rem;
+    list-style: none;
+  }
+  .year-group summary::-webkit-details-marker { display: none; }
+  .year-group summary::before { content: "▸ "; color: var(--accent); }
+  .year-group[open] summary::before { content: "▾ "; }
+  .year-group .count { color: var(--text-dim); font-weight: 400; font-size: 0.85rem; }
+  .paper-list { list-style: none; padding: 0 0 12px; margin: 0; }
+  .paper-list li { padding: 8px 4px 8px 20px; border-top: 1px solid var(--border); font-size: 0.92rem; }
+  .paper-list li:first-child { border-top: none; }
+  .paper-title a { font-weight: 500; }
+  .paper-authors { display: block; color: var(--text-dim); font-size: 0.85rem; margin-top: 2px; }
+  .paper-dblp { margin-left: 8px; font-family: var(--mono); font-size: 0.75rem; color: var(--text-dim); }
+</style>
+
+<script>
+const ENDPOINT = "https://sparql.dblp.org/sparql";
+const QUERY = `PREFIX dblp: <https://dblp.org/rdf/schema#>
+SELECT ?publ ?year ?title (SAMPLE(?ee0) AS ?ee) (GROUP_CONCAT(DISTINCT ?authorName; separator="||") AS ?authors) WHERE {
+  ?publ dblp:publishedInStream <https://dblp.org/streams/conf/swat4ls> ;
+        dblp:title ?title ;
+        dblp:yearOfPublication ?year ;
+        dblp:authoredBy ?author .
+  ?author dblp:primaryCreatorName ?authorName .
+  OPTIONAL { ?publ dblp:documentPage ?ee0 }
+}
+GROUP BY ?publ ?year ?title
+ORDER BY DESC(?year) ?title`;
+
+let allRows = [];
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function render(rows) {
+  const root = document.getElementById('proc-root');
+  const byYear = {};
+  rows.forEach(r => { (byYear[r.year] = byYear[r.year] || []).push(r); });
+  const years = Object.keys(byYear).sort((a, b) => b - a);
+
+  document.getElementById('proc-stats').textContent =
+    rows.length + ' papers across ' + years.length + ' editions — live from dblp.org';
+
+  root.innerHTML = years.map((y, i) => {
+    const items = byYear[y].map(r => `
+      <li>
+        <span class="paper-title">${r.ee ? `<a href="${r.ee}" target="_blank" rel="noopener">${escapeHtml(r.title)}</a>` : escapeHtml(r.title)}</span>
+        <a class="paper-dblp" href="${r.dblp}" target="_blank" rel="noopener">[dblp]</a>
+        <span class="paper-authors">${r.authors.map(escapeHtml).join(', ')}</span>
+      </li>`).join('');
+    return `<details class="year-group"${i === 0 ? ' open' : ''}>
+      <summary>${y} <span class="count">(${byYear[y].length} papers)</span></summary>
+      <ul class="paper-list">${items}</ul>
+    </details>`;
+  }).join('');
+}
+
+async function loadProceedings() {
+  const root = document.getElementById('proc-root');
+  const url = ENDPOINT + '?query=' + encodeURIComponent(QUERY);
+  try {
+    const res = await fetch(url, { headers: { Accept: 'application/sparql-results+json' } });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    allRows = data.results.bindings.map(b => ({
+      title: (b.title.value || '').replace(/\\.$/, ''),
+      year: b.year.value,
+      ee: b.ee ? b.ee.value : null,
+      dblp: b.publ.value,
+      authors: b.authors ? b.authors.value.split('||') : []
+    }));
+    render(allRows);
+  } catch (err) {
+    document.getElementById('proc-stats').textContent = 'Could not reach dblp.org';
+    root.innerHTML = '<div class="coming-soon">Could not reach the dblp SPARQL endpoint (' +
+      escapeHtml(err.message) +
+      '). Browse the proceedings directly at <a href="https://dblp.org/db/conf/swat4ls/" target="_blank" rel="noopener">dblp.org</a>.</div>';
+  }
+}
+
+document.getElementById('proc-search').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase();
+  document.querySelectorAll('.year-group').forEach(group => {
+    let visible = 0;
+    group.querySelectorAll('.paper-list > li').forEach(li => {
+      const match = li.textContent.toLowerCase().includes(q);
+      li.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+    group.style.display = visible ? '' : 'none';
+    if (q) group.open = true;
+  });
+});
+
+loadProceedings();
+</script>
+
+</body>
+</html>
