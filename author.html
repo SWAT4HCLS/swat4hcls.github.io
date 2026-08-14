@@ -103,7 +103,10 @@ async function loadAuthor(fullPid) {
   const ENDPOINT = 'https://sparql.dblp.org/sparql';
 
   const nameQuery = `PREFIX dblp: <https://dblp.org/rdf/schema#>
-SELECT ?name WHERE { <${fullPid}> dblp:primaryCreatorName ?name } LIMIT 1`;
+SELECT ?name ?orcid WHERE {
+  <${fullPid}> dblp:primaryCreatorName ?name .
+  OPTIONAL { <${fullPid}> dblp:orcid ?orcid }
+} LIMIT 1`;
 
   const papersQuery = `PREFIX dblp: <https://dblp.org/rdf/schema#>
 SELECT ?publ ?year ?title ?ee (GROUP_CONCAT(DISTINCT CONCAT(?coauthorName, "::", STR(?coauthor)); separator="||") AS ?coauthors) WHERE {
@@ -132,7 +135,9 @@ ORDER BY DESC(?year)`;
       .filter(p => p.author === fullPid)
       .filter(p => !p.validThrough || p.validThrough >= today)
       .sort((a, b) => (b.datePosted || '').localeCompare(a.datePosted || ''));
-    const dblpName = nameRes.results.bindings[0] ? nameRes.results.bindings[0].name.value : null;
+    const nameBinding = nameRes.results.bindings[0];
+    const dblpName = nameBinding ? nameBinding.name.value : null;
+    const dblpOrcid = nameBinding && nameBinding.orcid ? nameBinding.orcid.value : null;
 
     const papers = papersRes.results.bindings.map(b => ({
       title: (b.title.value || '').replace(/\.$/, ''),
@@ -151,20 +156,22 @@ ORDER BY DESC(?year)`;
       return;
     }
 
-    render(fullPid, profile, dblpName, papers, posts);
+    render(fullPid, profile, dblpName, dblpOrcid, papers, posts);
   } catch (err) {
     root.innerHTML = '<div class="coming-soon">Could not load author data (' + escapeHtml(err.message) + '). ' +
       'Try the <a href="https://dblp.org/pid/' + escapeHtml(shortPid(fullPid)) + '" target="_blank" rel="noopener">dblp record</a> directly.</div>';
   }
 }
 
-function render(fullPid, profile, dblpName, papers, posts) {
+function render(fullPid, profile, dblpName, dblpOrcid, papers, posts) {
   const displayName = (profile && profile.name) || dblpName || 'Unknown author';
   document.getElementById('page-title').textContent = displayName + ' – SWAT4HCLS';
 
-  const orcid = profile && profile.sameAs
+  const profileOrcid = profile && profile.sameAs
     ? [].concat(profile.sameAs).find(u => u.includes('orcid.org'))
     : null;
+  // dblp's own record takes priority — it's independently verified, not self-submitted.
+  const orcid = dblpOrcid || profileOrcid;
 
   const initials = displayName.split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
@@ -228,12 +235,65 @@ function render(fullPid, profile, dblpName, papers, posts) {
     <p style="margin-top:${posts.length ? '14px' : '0'}"><a href="https://github.com/SWAT4HCLS/swat4hcls.github.io/issues/new?template=author-post.yml" target="_blank" rel="noopener">Post an update to this page &rarr;</a></p>
     ` : ''}
 
+    ${orcid ? `
+    <h2>Recent publications <span class="mono" style="font-weight:400;color:var(--text-dim);font-size:0.9rem">via ORCID</span></h2>
+    <div id="recent-pubs-root"><div class="coming-soon">Loading from orcid.org&hellip;</div></div>
+    ` : ''}
+
     <h2>Papers at SWAT4HCLS <span class="mono" style="font-weight:400;color:var(--text-dim);font-size:0.9rem">(${papers.length})</span></h2>
     <ul class="paper-list">${papersHtml || '<li>No papers found in the SWAT4HCLS proceedings stream on dblp.</li>'}</ul>
 
     <h2>Co-authors <span class="mono" style="font-weight:400;color:var(--text-dim);font-size:0.9rem">(${coauthorMap.size})</span></h2>
     <div class="contributor-list">${coauthorsHtml || '<span class="paper-authors">None on record.</span>'}</div>
   `;
+
+  if (orcid) loadRecentPublications(orcid);
+}
+
+async function loadRecentPublications(orcidUrl) {
+  const container = document.getElementById('recent-pubs-root');
+  const orcidId = orcidUrl.replace(/^https?:\/\/orcid\.org\//, '').replace(/\/$/, '');
+  try {
+    const res = await fetch(`https://pub.orcid.org/v3.0/${encodeURIComponent(orcidId)}/works`, {
+      headers: { Accept: 'application/json' }
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+
+    const works = (data.group || [])
+      .map(g => g['work-summary'] && g['work-summary'][0])
+      .filter(Boolean)
+      .map(w => {
+        const d = w['publication-date'];
+        const year = d && d.year ? d.year.value : null;
+        const month = d && d.month ? d.month.value : '00';
+        const doi = ((w['external-ids'] || {})['external-id'] || []).find(e => e['external-id-type'] === 'doi');
+        const url = doi ? `https://doi.org/${doi['external-id-value']}` : (w.url ? w.url.value : null);
+        return {
+          title: w.title && w.title.title ? w.title.title.value : 'Untitled',
+          year,
+          sortKey: year ? `${year}-${month}` : '0000-00',
+          journal: w['journal-title'] ? w['journal-title'].value : null,
+          url
+        };
+      })
+      .sort((a, b) => b.sortKey.localeCompare(a.sortKey))
+      .slice(0, 8);
+
+    if (!works.length) {
+      container.innerHTML = '<p style="color:var(--text-dim)">No works on record at ORCID.</p>';
+      return;
+    }
+
+    container.innerHTML = `<ul class="paper-list">${works.map(w => `
+      <li>
+        <span class="paper-title">${w.url ? `<a href="${escapeHtml(w.url)}" target="_blank" rel="noopener">${escapeHtml(w.title)}</a>` : escapeHtml(w.title)}</span>
+        <span class="paper-authors mono">${w.year ? escapeHtml(w.year) : 'n.d.'}${w.journal ? ' &middot; ' + escapeHtml(w.journal) : ''}</span>
+      </li>`).join('')}</ul>
+      <p class="skyline-credit" style="margin-top:8px">From <a href="${escapeHtml(orcidUrl)}" target="_blank" rel="noopener">${escapeHtml(orcidId)}</a> on ORCID &mdash; not limited to SWAT4HCLS.</p>`;
+  } catch (err) {
+    container.innerHTML = `<div class="coming-soon">Could not load ORCID works (${escapeHtml(err.message)}). <a href="${escapeHtml(orcidUrl)}" target="_blank" rel="noopener">View on ORCID</a> directly.</div>`;
+  }
 }
 </script>
 

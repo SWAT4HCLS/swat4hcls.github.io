@@ -52,8 +52,15 @@ for every author, not a page per person. On load it:
 1. Fetches `assets/data/authors.jsonld` and looks for a node whose `@id` matches
    the full dblp PID URI (`https://dblp.org/pid/<pid>`).
 2. Runs a live SPARQL query for that PID's papers and co-authors in the
-   `conf/swat4ls` stream (same pattern as `proceedings.html`).
-3. Renders whichever of the two it finds: dblp alone gives a working page
+   `conf/swat4ls` stream (same pattern as `proceedings.html`), also asking dblp
+   for `dblp:orcid` on that PID — many dblp records already link an ORCID iD,
+   independently of anything submitted to this site.
+3. If an ORCID iD turns up (from dblp, or failing that from the submitted
+   profile's `sameAs`), fetches `https://pub.orcid.org/v3.0/<id>/works` (public,
+   no auth, CORS-open) and renders a "Recent publications" section — the
+   person's broader output, not limited to SWAT4HCLS/dblp. No ORCID on either
+   side, no section; nothing is invented.
+4. Renders whichever of the two it finds: dblp alone gives a working page
    (papers, co-authors, dblp link) with no submitted profile; a matching
    `authors.jsonld` node adds a photo, bio, affiliation, homepage, and ORCID.
 
