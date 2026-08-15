@@ -35,6 +35,9 @@
 
 <div class="wrap page-layout">
   <main>
+    <p class="sparql-status" id="sparql-status" style="margin:0 0 14px">
+      <span class="dot checking"></span> Checking sparql.dblp.org&hellip;
+    </p>
     <div id="author-root">
       <div class="coming-soon">Loading author&hellip;</div>
     </div>
@@ -88,6 +91,18 @@ function shortPid(fullPidUrl) {
   return fullPidUrl.replace('https://dblp.org/pid/', '');
 }
 
+function setSparqlStatus(online, detail) {
+  const el = document.getElementById('sparql-status');
+  if (!el) return;
+  if (online) {
+    el.innerHTML = '<span class="dot online"></span> sparql.dblp.org is online — results below are live';
+  } else {
+    el.innerHTML = '<span class="dot offline"></span> sparql.dblp.org did not respond' +
+      (detail ? ' (' + escapeHtml(detail) + ')' : '') +
+      ' — that\'s why nothing loaded below, not a lack of data';
+  }
+}
+
 const params = new URLSearchParams(location.search);
 const pidParam = params.get('pid');
 const root = document.getElementById('author-root');
@@ -129,6 +144,7 @@ ORDER BY DESC(?year)`;
       fetch(ENDPOINT + '?query=' + encodeURIComponent(papersQuery), { headers: { Accept: 'application/sparql-results+json' } }).then(r => r.json())
     ]);
 
+    setSparqlStatus(true);
     const profile = (profileResp['@graph'] || []).find(node => node['@id'] === fullPid);
     const today = new Date().toISOString().slice(0, 10);
     const posts = (postsResp['@graph'] || [])
@@ -158,6 +174,7 @@ ORDER BY DESC(?year)`;
 
     render(fullPid, profile, dblpName, dblpOrcid, papers, posts);
   } catch (err) {
+    setSparqlStatus(false, err.message);
     root.innerHTML = '<div class="coming-soon">Could not load author data (' + escapeHtml(err.message) + '). ' +
       'Try the <a href="https://dblp.org/pid/' + escapeHtml(shortPid(fullPid)) + '" target="_blank" rel="noopener">dblp record</a> directly.</div>';
   }

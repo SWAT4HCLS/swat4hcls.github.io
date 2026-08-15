@@ -191,6 +191,26 @@ a.contributor-chip:hover { border-color: var(--accent); text-decoration: none; }
   padding: 1px 6px;
 }
 
+/* ---- Live SPARQL endpoint status ---- */
+.sparql-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+.sparql-status .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex: none;
+}
+.sparql-status .dot.online { background: #22c55e; }
+.sparql-status .dot.offline { background: #ef4444; }
+.sparql-status .dot.checking { background: var(--text-dim); }
+
 /* ---- Posts / vacancies ---- */
 .post-card {
   padding: 16px 18px;
