@@ -1,30 +1,31 @@
 # swat4hcls.github.io
 
-Source for the current SWAT4HCLS conference edition (Basel 2027), migrated off the
-18-year-old WordPress install at [swat4ls.org](https://www.swat4ls.org).
+Source for SWAT4HCLS, migrated off the 18-year-old WordPress install at
+[swat4ls.org](https://www.swat4ls.org). Past editions (2008–2026) and the blog
+archive stay on swat4ls.org — pages here link back to it, not duplicate it.
 
-This repo holds only the **current edition**. Past editions (2008–2026), proceedings,
-and the blog archive stay on swat4ls.org — every page here links back to it.
+## Two tiers
 
-## Structure
+The site is split by what actually changes year to year:
+
+- **General (repo root)** — the community, not any one edition: home, the live
+  Proceedings archive, Vacancies, Who-is-who, and the person-centric author
+  pages. None of this is Basel-specific and none of it should need touching
+  when the conference moves to its next host city.
+- **Edition-specific (`2027/`)** — everything about *this* conference: dates,
+  programme, CFP, registration, biohackathon, sponsorship, local organizing
+  committee. The next edition gets its own folder (e.g. `2028/`) rather than
+  overwriting this one; old editions' folders can stay as an archive here or
+  simply keep linking to swat4ls.org.
 
 Plain HTML/CSS, no build step. GitHub Pages serves the repo root directly.
 
 ```
-index.html                   Home
-programme.html                Programme overview (day-by-day schedule)
-tutorials.html                 \_ tutorials sub-page
-keynotes.html                   \_ keynote speakers sub-page
-accepted-submissions.html        \_ accepted papers/posters/demos sub-page
-faq.html
-call-for-papers.html
-registration.html
-biohackathon.html
-sponsorship.html
-organization.html
+index.html                   General home (SWAT4HCLS, all editions)
 proceedings.html              Live query against dblp's public SPARQL endpoint
 author.html                   Per-author page, ?pid=<dblp pid> (e.g. author.html?pid=09/2013)
 vacancies.html                 Aggregated job postings + "available for hire" listings
+who-is-who.html               Central + local organizing committees, live contributor list
 assets/css/style.css
 assets/images/
 assets/data/authors.jsonld    Extended author profiles (JSON-LD)
@@ -32,7 +33,32 @@ assets/data/posts.jsonld      Author announcements + vacancy listings (JSON-LD)
 .github/ISSUE_TEMPLATE/        Submission forms: author-profile, author-post, company-vacancy
 .github/workflows/             One workflow per form; each opens a PR, never auto-merges
 .github/scripts/               Python parsers the workflows run (stdlib only, no deps)
+
+2027/index.html                Basel 2027 edition home
+2027/programme.html            Day-by-day schedule
+2027/tutorials.html             \_ tutorials sub-page
+2027/keynotes.html               \_ keynote speakers sub-page
+2027/accepted-submissions.html    \_ accepted papers/posters/demos sub-page
+2027/faq.html
+2027/call-for-papers.html
+2027/registration.html
+2027/biohackathon.html
+2027/sponsorship.html          Edition-specific pricing/contact
+2027/organization.html         Local (Basel) organizing committee — central committee lives on who-is-who.html
 ```
+
+`assets/` stays shared at the repo root; edition pages reference it as
+`../assets/...`. A handful of old flat paths (`programme.html`, `faq.html`,
+etc.) are kept as tiny meta-refresh redirect stubs into `2027/` — the site
+briefly had those live at the root before this split, so incoming links don't
+just 404.
+
+### Adding a new edition
+
+Copy the whole `2027/` folder to e.g. `2028/`, update its content, and repoint
+the general pages' "Basel 2027 →" nav links / homepage CTA at the new folder.
+Old editions can either stay in the repo as an archive or get pruned in favor
+of the swat4ls.org archive — not yet decided.
 
 `programme.html`, `tutorials.html`, `keynotes.html`, and `accepted-submissions.html`
 share a small sub-nav and are meant to be edited as a group.
@@ -151,9 +177,10 @@ check that setting first if submissions stop producing PRs.
 ## Editing content
 
 Every page is standalone HTML — no templating. The nav, sidebar, and footer are
-duplicated across pages by design (kept in sync manually; there are only 14 pages).
-When adding a page, copy the closest existing one and update the `nav`/`subnav`
-`active` class and the `<title>`.
+duplicated across pages by design (kept in sync manually; there are only 16
+real pages total, plus 10 tiny redirect stubs for old flat URLs). When adding a page, copy the closest existing one **in the same
+tier** (general vs. edition — they have different nav sets, see "Two tiers"
+above) and update the `nav`/`subnav` `active` class and the `<title>`.
 
 ## Local preview
 
