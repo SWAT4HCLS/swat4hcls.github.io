@@ -36,7 +36,14 @@
     <h1 class="page-title">SWAT4HCLS Biohackathon 2027</h1>
     <p class="subdate">18th International SWAT4HCLS Conference &middot; 1&ndash;4 February 2027 &middot; Basel, Switzerland</p>
 
-    <div class="coming-soon">More information coming soon.</div>
+    <p>The SWAT4HCLS Biohackathon now aligns with the <a href="https://biohackathon.org/" target="_blank" rel="noopener">DBCLS BioHackathon</a> format. Detailed 2027 logistics (team formation, project proposals, venue) will be published closer to the conference.</p>
+
+    <h2 style="margin-top:2em">Publish your hack report</h2>
+    <p><a href="https://biohackrxiv.org/" target="_blank" rel="noopener">BioHackrXiv</a> is a preprint server for BioHackathon/CodeFest/sprint reports, sponsored by DBCLS and indexed by Europe PMC. The first, last, or corresponding author must have taken part in the event. See the <a href="https://guide.biohackrxiv.org/submission_guidelines.html" target="_blank" rel="noopener">submission guidelines</a>.</p>
+    <p class="sparql-status" id="biohackrxiv-status" style="margin:8px 0 4px">
+      <span class="dot checking"></span> Checking index.biohackrxiv.org&hellip;
+    </p>
+    <ul class="paper-list" id="biohackrxiv-root"><li>Loading&hellip;</li></ul>
 
   </main>
 
@@ -73,6 +80,64 @@
     &copy; 2008&ndash;2027 The Organizers &middot; <a href="../index.html">SWAT4HCLS</a> &middot; Past editions archived at <a href="https://www.swat4ls.org">swat4ls.org</a>
   </div>
 </footer>
+
+<script>
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Event tags as indexed by index.biohackrxiv.org. Not all years use this
+// exact naming (SWAT4HCLS23/26 return 404) — add new tags here as they
+// appear once a future edition's reports get indexed.
+const BIOHACKRXIV_TAGS = ['SWAT4HCLS24', 'SWAT4HCLS25'];
+
+async function loadBioHackrXiv() {
+  const statusEl = document.getElementById('biohackrxiv-status');
+  const root = document.getElementById('biohackrxiv-root');
+  try {
+    const results = await Promise.all(BIOHACKRXIV_TAGS.map(tag =>
+      fetch(`https://index.biohackrxiv.org/feed/by_tag/${tag}.xml`)
+        .then(r => (r.ok ? r.text() : null))
+        .catch(() => null)
+    ));
+
+    if (results.every(r => r === null)) throw new Error('no feeds reachable');
+
+    statusEl.innerHTML = '<span class="dot online"></span> index.biohackrxiv.org is online — results below are live';
+
+    const parser = new DOMParser();
+    const entries = [];
+    results.forEach(xml => {
+      if (!xml) return;
+      const doc = parser.parseFromString(xml, 'application/xml');
+      doc.querySelectorAll('entry').forEach(entry => {
+        const link = entry.querySelector('link');
+        const author = entry.querySelector('author > name');
+        entries.push({
+          title: entry.querySelector('title')?.textContent || 'Untitled',
+          url: link ? link.getAttribute('href') : null,
+          published: entry.querySelector('published')?.textContent?.slice(0, 10) || '',
+          author: author ? author.textContent : null
+        });
+      });
+    });
+    entries.sort((a, b) => b.published.localeCompare(a.published));
+
+    root.innerHTML = entries.length
+      ? entries.map(e => `
+        <li>
+          <span class="paper-title">${e.url ? `<a href="${escapeHtml(e.url)}" target="_blank" rel="noopener">${escapeHtml(e.title)}</a>` : escapeHtml(e.title)}</span>
+          <span class="paper-authors mono">${escapeHtml(e.published)}${e.author ? ' &middot; ' + escapeHtml(e.author) + ' et al.' : ''}</span>
+        </li>`).join('')
+      : '<li>No preprints found yet.</li>';
+  } catch (err) {
+    statusEl.innerHTML = '<span class="dot offline"></span> index.biohackrxiv.org did not respond (' + escapeHtml(err.message) + ')';
+    root.innerHTML = '<li><div class="coming-soon">Browse preprints directly at <a href="https://index.biohackrxiv.org/tag/SWAT4HCLS25" target="_blank" rel="noopener">index.biohackrxiv.org</a>.</div></li>';
+  }
+}
+
+loadBioHackrXiv();
+</script>
 
 </body>
 </html>
