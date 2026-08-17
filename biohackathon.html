@@ -2,11 +2,134 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="refresh" content="0; url=2027/biohackathon.html">
-<link rel="canonical" href="2027/biohackathon.html">
-<title>Moved &ndash; SWAT4HCLS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biohackathon &ndash; SWAT4HCLS</title>
+<link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-<p>This page moved to <a href="2027/biohackathon.html">2027/biohackathon.html</a>.</p>
+
+<header class="site-header">
+  <div class="wrap nav-bar">
+    <a class="logo" href="index.html"><img class="brand-mark" src="assets/images/logo-icon.png" alt="SWAT4HCLS logo"><span class="prompt">swat4hcls</span><span class="cursor"></span></a>
+    <nav class="main-nav">
+      <a href="index.html">SWAT4HCLS</a>
+      <a href="proceedings.html">Proceedings</a>
+      <a href="vacancies.html">Vacancies</a>
+      <a href="who-is-who.html">Who is who</a>
+      <a href="biohackathon.html" class="active">Biohackathon</a>
+      <a href="tutorials.html">Tutorials</a>
+      <a href="2027/index.html">Basel 2027 &rarr;</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap page-layout">
+  <main>
+    <h1 class="page-title" style="margin-top:0">Biohackathon</h1>
+    <p class="subdate">One of SWAT4HCLS&rsquo;s three pillars, every edition</p>
+
+    <p>Each SWAT4HCLS edition runs on three pillars: a tutorials day, a two-day conference, and a full biohackathon day. A satellite hacking room also runs alongside the tutorials and conference days, so participants can start meeting and hacking early &mdash; the full hackathon day is where that work continues and comes together, not where it starts.</p>
+
+    <p>&ldquo;Hackathon&rdquo; undersells it. The SWAT4HCLS biohackathon isn&rsquo;t just product development &mdash; it&rsquo;s a place to start a new project, pitch a joint project proposal, draft a joint paper, or simply hack on something with people you just met. It aligns with the <a href="https://biohackathon.org/" target="_blank" rel="noopener">DBCLS BioHackathon</a> format.</p>
+
+    <p>SWAT4HCLS&rsquo;s biohackathon is also part of a wider network of biohackathons &mdash; DBCLS&rsquo;s own event in Japan, BioHackathon Europe, and others &mdash; where the same projects keep showing up, carried forward by the same people. A single event generates a lot of energy and real intermediate results, but that momentum easily dissolves once everyone returns to their day jobs. Chaining participation across successive biohackathons is what actually lets a project progress &mdash; slowly, but steadily.</p>
+
+    <h2>Publish your hack report</h2>
+    <p><a href="https://biohackrxiv.org/" target="_blank" rel="noopener">BioHackrXiv</a> is a preprint server for BioHackathon/CodeFest/sprint reports, sponsored by DBCLS and indexed by Europe PMC. The first, last, or corresponding author must have taken part in the event. See the <a href="https://guide.biohackrxiv.org/submission_guidelines.html" target="_blank" rel="noopener">submission guidelines</a>.</p>
+    <p class="sparql-status" id="biohackrxiv-status" style="margin:8px 0 4px">
+      <span class="dot checking"></span> Checking index.biohackrxiv.org&hellip;
+    </p>
+    <ul class="paper-list" id="biohackrxiv-root"><li>Loading&hellip;</li></ul>
+
+    <div class="card" style="margin-top:24px">
+      Looking for this year&rsquo;s biohackathon &mdash; dates, team formation, project proposals? See <a href="2027/biohackathon.html">SWAT4HCLS Biohackathon 2027</a>.
+    </div>
+  </main>
+
+  <aside class="sidebar">
+    <section>
+      <h3>Links</h3>
+      <ul>
+        <li><a href="index.html#about-community">About SWAT4HCLS</a></li>
+        <li><a href="2027/index.html">Basel 2027</a></li>
+        <li><a href="proceedings.html">Proceedings</a></li>
+        <li><a href="mailto:swat4hcls@gmail.com">Contact</a></li>
+      </ul>
+    </section>
+    <section>
+      <h3>Follow us</h3>
+      <div class="social-icons">
+        <a href="https://genomic.social/@swat4hcls" target="_blank" rel="noopener"><img src="assets/images/icon-mastodon.png" alt="SWAT4HCLS on Mastodon"></a>
+        <a href="https://bsky.app/profile/swat4hcls.bsky.social" target="_blank" rel="noopener"><img src="assets/images/icon-bluesky.png" alt="SWAT4HCLS on Bluesky"></a>
+        <a href="https://www.youtube.com/channel/UCO65ployuRweYHpRFeVe1Mg" target="_blank" rel="noopener"><img src="assets/images/icon-youtube.png" alt="SWAT4HCLS on Youtube"></a>
+      </div>
+    </section>
+  </aside>
+</div>
+
+<footer class="site-footer">
+  <div class="wrap">
+    &copy; 2008&ndash;2027 The Organizers &middot; Current edition: <a href="2027/index.html">Basel 2027</a> &middot; Past editions archived at <a href="https://www.swat4ls.org">swat4ls.org</a> &middot; Stichting SWAT4HCLS, KVK 64129969
+  </div>
+</footer>
+
+<script>
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Event tags as indexed by index.biohackrxiv.org. Not all years use this
+// exact naming (SWAT4HCLS23/26 return 404) — add new tags here as they
+// appear once a future edition's reports get indexed.
+const BIOHACKRXIV_TAGS = ['SWAT4HCLS24', 'SWAT4HCLS25'];
+
+async function loadBioHackrXiv() {
+  const statusEl = document.getElementById('biohackrxiv-status');
+  const root = document.getElementById('biohackrxiv-root');
+  try {
+    const results = await Promise.all(BIOHACKRXIV_TAGS.map(tag =>
+      fetch(`https://index.biohackrxiv.org/feed/by_tag/${tag}.xml`)
+        .then(r => (r.ok ? r.text() : null))
+        .catch(() => null)
+    ));
+
+    if (results.every(r => r === null)) throw new Error('no feeds reachable');
+
+    statusEl.innerHTML = '<span class="dot online"></span> index.biohackrxiv.org is online — results below are live';
+
+    const parser = new DOMParser();
+    const entries = [];
+    results.forEach(xml => {
+      if (!xml) return;
+      const doc = parser.parseFromString(xml, 'application/xml');
+      doc.querySelectorAll('entry').forEach(entry => {
+        const link = entry.querySelector('link');
+        const author = entry.querySelector('author > name');
+        entries.push({
+          title: entry.querySelector('title')?.textContent || 'Untitled',
+          url: link ? link.getAttribute('href') : null,
+          published: entry.querySelector('published')?.textContent?.slice(0, 10) || '',
+          author: author ? author.textContent : null
+        });
+      });
+    });
+    entries.sort((a, b) => b.published.localeCompare(a.published));
+
+    root.innerHTML = entries.length
+      ? entries.map(e => `
+        <li>
+          <span class="paper-title">${e.url ? `<a href="${escapeHtml(e.url)}" target="_blank" rel="noopener">${escapeHtml(e.title)}</a>` : escapeHtml(e.title)}</span>
+          <span class="paper-authors mono">${escapeHtml(e.published)}${e.author ? ' &middot; ' + escapeHtml(e.author) + ' et al.' : ''}</span>
+        </li>`).join('')
+      : '<li>No preprints found yet.</li>';
+  } catch (err) {
+    statusEl.innerHTML = '<span class="dot offline"></span> index.biohackrxiv.org did not respond (' + escapeHtml(err.message) + ')';
+    root.innerHTML = '<li><div class="coming-soon">Browse preprints directly at <a href="https://index.biohackrxiv.org/tag/SWAT4HCLS25" target="_blank" rel="noopener">index.biohackrxiv.org</a>.</div></li>';
+  }
+}
+
+loadBioHackrXiv();
+</script>
+
 </body>
 </html>
