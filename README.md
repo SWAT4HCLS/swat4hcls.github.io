@@ -86,7 +86,19 @@ for every author, not a page per person. On load it:
    no auth, CORS-open) and renders a "Recent publications" section — the
    person's broader output, not limited to SWAT4HCLS/dblp. No ORCID on either
    side, no section; nothing is invented.
-4. Renders whichever of the two it finds: dblp alone gives a working page
+4. If an ORCID iD turned up, also fetches `.../employments` for their current
+   employer name and queries CORDIS (`POST https://cordis.europa.eu/datalab/sparql-api`,
+   form-encoded `query` param, CORS-open) for EURIO organisations whose
+   `legalName` contains a distinctive word from that employer name, with a
+   project count per match — rendered as "EU-funded projects via CORDIS."
+   This is **name-based matching, not an identifier join** — EURIO models
+   organisations, not individual researchers, and an org's CORDIS legal name
+   can differ completely from its common English name (e.g. Leiden University
+   Medical Center is registered as "ACADEMISCH ZIEKENHUIS LEIDEN"). Generic
+   words (university, medical, center, foundation, ...) are filtered out of
+   the search terms so the query doesn't just match everything; results are
+   still leads to verify, not confirmed affiliations — the page says so.
+5. Renders whichever of the two it finds: dblp alone gives a working page
    (papers, co-authors, dblp link) with no submitted profile; a matching
    `authors.jsonld` node adds a photo, bio, affiliation, homepage, and ORCID.
 
